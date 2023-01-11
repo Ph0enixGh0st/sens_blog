@@ -20,7 +20,7 @@ def serialize_post(post):
 def serialize_tag(tag):
     return {
         'title': tag.title,
-        'posts_with_tag': len(Post.objects.filter(tags=tag)), # <<<<< PIECE A SHIT : len(Post.objects.filter(tags=tag)) /// tag.tags_count
+        'posts_with_tag': tag.tags_count, # <<<<< PIECE A SHIT : len(Post.objects.filter(tags=tag)) /// tag.tags_count
     }
 
 
