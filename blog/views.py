@@ -13,24 +13,27 @@ def serialize_post(post):
         'published_at': post.published_at,
         'slug': post.slug,
         'tags': [serialize_tag(tag) for tag in post.tags.all()],
-        'first_tag_title': post.tags.all()[0].title,
+        'first_tag_title': post.tags.first().title,
     }
 
 
 def serialize_tag(tag):
     return {
         'title': tag.title,
-        'posts_with_tag': tag.posts_count, # <<<<< PIECE A SHIT : len(Post.objects.filter(tags=tag))
+        'posts_with_tag': len(Post.objects.filter(tags=tag)), # <<<<< PIECE A SHIT : len(Post.objects.filter(tags=tag)) /// tag.tags_count
     }
+
+
+#def serialize_tag(tag):
+    #return {
+        #'title': tag.title,
+        #'posts_with_tag': tag.tags_count, # <<<<< PIECE A SHIT : len(Post.objects.filter(tags=tag)) /// tag.tags_count
+    #}
 
 
 def index(request):
 
-    prefetch = Prefetch(
-        'tags',
-        queryset=Tag.objects.annotate(posts_count=Count('posts'))
-    )
-
+    prefetch = Prefetch('tags', queryset=Tag.objects.annotate(posts_count=Count('posts')))
     most_popular_posts = Post.objects.popular().select_related('author').prefetch_related(prefetch)[:5].fetch_with_comments_count()
 
     #most_popular_posts = Post.objects.popular().select_related('author')[:5].fetch_with_comments_count()

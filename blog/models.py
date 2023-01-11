@@ -6,7 +6,8 @@ from django.db.models import Count
 
 class TagQuerySet(models.QuerySet):
     def popular(self):
-        return self.annotate(tags_count=Count('posts')).order_by('-tags_count')
+        popular_tags = self.annotate(tags_count=Count('posts')).order_by('-tags_count')
+        return popular_tags
 
 
 class PostQuerySet(models.QuerySet):
@@ -88,7 +89,7 @@ class Comment(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор')
-
+    objects = PostQuerySet.as_manager()
     text = models.TextField('Текст комментария')
     published_at = models.DateTimeField('Дата и время публикации')
 
