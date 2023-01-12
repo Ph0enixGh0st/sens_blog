@@ -20,27 +20,26 @@ def serialize_post(post):
 def serialize_tag(tag):
     return {
         'title': tag.title,
-        'posts_with_tag': tag.tags_count, # <<<<< PIECE A SHIT : len(Post.objects.filter(tags=tag)) /// tag.tags_count
+        'posts_with_tag': tag.posts_count, # <<<<< PIECE A SHIT : len(Post.objects.filter(tags=tag)) /// tag.tags_count
     }
-
-
-#def serialize_tag(tag):
-    #return {
-        #'title': tag.title,
-        #'posts_with_tag': tag.tags_count, # <<<<< PIECE A SHIT : len(Post.objects.filter(tags=tag)) /// tag.tags_count
-    #}
 
 
 def index(request):
 
-    prefetch = Prefetch('tags', queryset=Tag.objects.annotate(posts_count=Count('posts')))
-    most_popular_posts = Post.objects.popular().select_related('author').prefetch_related(prefetch)[:5].fetch_with_comments_count()
+    #prefetch = Prefetch('tags', queryset=Tag.objects.annotate(posts_count=Count('posts')))
+    #most_popular_posts = Post.objects.popular().select_related('author').prefetch_related(prefetch)[:5].fetch_with_comments_count()
+
+    most_popular_posts = Post.objects.popular().select_related('author').prefetch_related(Prefetch('tags', Tag.objects.annotate(posts_count=Count('posts'))))[:5].fetch_with_comments_count()
+
+    fresh_posts = Post.objects.order_by('published_at').annotate(comments_count=Count('comments', distinct=True)).select_related('author').prefetch_related(Prefetch('tags', Tag.objects.annotate(posts_count=Count('posts'))))
+    most_fresh_posts = fresh_posts.order_by('-published_at')[:5].annotate(comments_count=Count('comments'))
+
+    most_popular_tags = Tag.objects.popular()[:5]
 
     #most_popular_posts = Post.objects.popular().select_related('author')[:5].fetch_with_comments_count()
 
-    most_fresh_posts = Post.objects.annotate(comments_count=Count('comments'), pub_dates=Count('published_at')).prefetch_related('tags').select_related('author').order_by('-published_at')[:5]
+    #most_fresh_posts = Post.objects.annotate(comments_count=Count('comments')).prefetch_related('tags').select_related('author').order_by('-published_at')[:5]
 
-    most_popular_tags = Tag.objects.popular()[:5]
 
     context = {
         'most_popular_posts': [serialize_post(post) for post in most_popular_posts[:5]],
