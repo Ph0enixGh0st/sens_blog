@@ -6,18 +6,21 @@ from django.db.models import Count, Prefetch
 
 class TagQuerySet(models.QuerySet):
     def popular(self):
-        popular_tags = self.annotate(posts_count=Count('posts')).order_by('-posts_count')
+        popular_tags = self.annotate(posts_count=Count('posts')).\
+            order_by('-posts_count')
         return popular_tags
 
 
 class PostQuerySet(models.QuerySet):
     def popular(self):
-        return self.annotate(likes_count=Count('likes')).order_by('-likes_count')
+        return self.annotate(likes_count=Count('likes')).\
+            order_by('-likes_count')
 
     def fetch_with_comments_count(self):
         most_popular_posts = list(self)
         popular_posts_ids = [post.id for post in most_popular_posts]
-        posts_with_comments = Post.objects.filter(id__in=popular_posts_ids).annotate(comments_count=Count('comments'))
+        posts_with_comments = Post.objects.filter(id__in=popular_posts_ids).\
+            annotate(comments_count=Count('comments'))
         post_comments = posts_with_comments.values_list('id', 'comments_count')
         count_for_id = dict(post_comments)
         for post in most_popular_posts:
@@ -25,7 +28,8 @@ class PostQuerySet(models.QuerySet):
         return most_popular_posts
 
     def prefetch_tags(self):
-        return self.prefetch_related(Prefetch('tags', queryset=Tag.objects.annotate(posts_count=Count('posts'))))
+        return self.prefetch_related(Prefetch('tags', queryset=Tag.objects.\
+            annotate(posts_count=Count('posts'))))
 
 
 class Post(models.Model):
